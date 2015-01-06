@@ -104,21 +104,30 @@ def hgnc_lookup(gene_symbol):
     hgnc_id = str(gene_symbol) + '_HGNC'
 
     hgnc_complete_set_fn = '/Users/irina/Projects/insilico medicine/datasets/hgnc_complete_set.txt'
+
+    tic = time.time()
     hgnc_df = pandas.read_csv(hgnc_complete_set_fn, delimiter='\t')
+    toc = time.time()
+    logger.debug('HGNC file load took {} sec'.format(toc - tic))
 
     cols = ['Approved Symbol', 'Previous Symbols', 'Synonyms', 'HGNC ID']
     hgnc_df = hgnc_df[cols]
 
     found = False
-    for idx, row in hgnc_df.iterrows():
-        for idx2, col in row.iteritems():
-            if col == gene_symbol:
-                hgnc_symbol = row['Approved Symbol']
-                hgnc_id = row['HGNC ID']
-                found = True
-                break
-        if found:
+
+    for col in cols:
+        df = hgnc_df[hgnc_df[col] == gene_symbol]
+        if df.shape[0] == 0:
+            continue
+        elif df.shape[0] == 1:
+            hgnc_symbol = df.loc[df.index[0], 'Approved Symbol']
+            hgnc_id = df.loc[df.index[0], 'HGNC ID']
+            found = True
             break
+        else:
+            raise Exception('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
+                gene_symbol, col, df.shape
+            ))
 
     if not found:
         logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
