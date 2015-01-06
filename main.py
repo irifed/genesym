@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 import pandas
-from genesym.geodriver import get_gpl, get_hgnc_symbol
+import time
+from genesym.geodriver import get_gpl, get_hgnc_id_symbol
 from pprint import pprint
 
 import logging
@@ -28,20 +29,37 @@ def process_platform(gpl_id):
 
     # create new column in dataframe
     gpldf['HGNC_Symbol'] = pandas.Series(index=gpldf.index)
+    gpldf['HGNC_ID'] = pandas.Series(index=gpldf.index)
 
-    for idx, row in gpldf[0:10].iterrows():
-        gpldf['HGNC_Symbol'] = get_hgnc_symbol(row)
+    # DEBUG
+    gpldf = gpldf[215:220]
 
-    for idx, row in gpldf[0:10].iterrows():
+
+    for idx, row in gpldf.iterrows():
+        logger.info('Processing ID={}'.format(row['ID']))
+
+        hgnc_id, hgnc_symbol = get_hgnc_id_symbol(row)
+        gpldf.loc[idx, 'HGNC_ID'] = hgnc_id
+        gpldf.loc[idx, 'HGNC_Symbol'] = hgnc_symbol
+
+        logging.debug('hgnc_id = {}, hgnc_symbol = {}'.format(hgnc_id, hgnc_symbol))
+
+    # DEBUG
+    for idx, row in gpldf.iterrows():
         print(row)
+
+    result_fn = gpl_id + '.hgnc.txt'
+    gpldf.to_csv(result_fn, sep='\t')
 
 
 def main():
     logger.info('Starting processing data')
-    # load list of platforms
-    # for each platform
-    #   process platform
+    # TODO load list of platforms
+    tic = time.time()
     process_platform('GPL570')
+    toc = time.time()
+
+    logger.debug('Total time = {}'.format(toc - tic))
 
     logger.info('All done!')
 

@@ -5,6 +5,7 @@ import re
 import rpy2.robjects as robjects
 import pandas.rpy.common as com
 import pandas
+import numpy
 
 import logging
 
@@ -53,23 +54,31 @@ def get_gpl(gpl_id):
 
     return gpldf
 
-def get_hgnc_symbol(row):
+def get_hgnc_id_symbol(row):
+    tic = time.time()
     # get gene symbol value
     # if it does not exist, get entrez id and lookup in biomart
     # if it does not exist, get unigene id and lookup in biomart
     # ... genbank accession
     # ...
 
-
     gene_symbol = get_gene_symbol(row)
     if gene_symbol is not None:
-        hgnc_symbol = hgnc_lookup(gene_symbol)
-        return hgnc_symbol
+        hgnc_id, hgnc_symbol = hgnc_lookup(gene_symbol)
 
     else:
         # lookup other ids
-        return 'other ids'
+        # entrez
+        # unigene
+        # genbank id GI
+        # genbank accession
+        hgnc_id, hgnc_symbol = 'TODO_ID', 'TODO_SYMBOL'
 
+    toc = time.time()
+
+    logging.debug('lookup time = {}'.format(toc - tic))
+
+    return hgnc_id, hgnc_symbol
 
 def get_gene_symbol(row):
     # TODO check: 'symbol' or 'gene symbol' or other symbol name must be present or not?
@@ -79,13 +88,48 @@ def get_gene_symbol(row):
         gene_symbol = row['Gene Symbol']
     elif 'Symbol' in row:
         gene_symbol = row['Symbol']
+    else:
+        logger.warning('Gene Symbol attribute is not found in row {}'.format(row))
+
+    logger.debug('gene_symbol = {}'.format(gene_symbol))
+
+    if type(gene_symbol) == float and numpy.isnan(gene_symbol):
+        gene_symbol = None
 
     return gene_symbol
 
 
 def hgnc_lookup(gene_symbol):
-    # TODO implement real HGNC lookup
-    return gene_symbol + '_HGNC'
+    hgnc_symbol = None
+    hgnc_id = str(gene_symbol) + '_HGNC'
+
+    hgnc_complete_set_fn = '/Users/irina/Projects/insilico medicine/datasets/hgnc_complete_set.txt'
+    hgnc_df = pandas.read_csv(hgnc_complete_set_fn, delimiter='\t')
+
+    cols = ['Approved Symbol', 'Previous Symbols', 'Synonyms', 'HGNC ID']
+    hgnc_df = hgnc_df[cols]
+
+    found = False
+    for idx, row in hgnc_df.iterrows():
+        for idx2, col in row.iteritems():
+            if col == gene_symbol:
+                hgnc_symbol = row['Approved Symbol']
+                hgnc_id = row['HGNC ID']
+                found = True
+                break
+        if found:
+            break
+
+    if not found:
+        logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
+
+    logger.debug('gene_symbol = {}, hgnc_symbol = {}, hgnc_id = {}'.format(
+        gene_symbol, hgnc_symbol, hgnc_id
+    ))
+    if gene_symbol != hgnc_symbol:
+        logger.debug('gene_symbol {} was changed to {}!'.format(gene_symbol, hgnc_symbol))
+
+    return hgnc_id, hgnc_symbol
 
 
 def get_symbol_from_entrez_id(entrez_id):
