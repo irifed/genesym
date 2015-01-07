@@ -6,12 +6,14 @@ import rpy2.robjects as robjects
 import pandas.rpy.common as com
 import pandas
 import numpy
-
 import logging
 
-logger = logging.getLogger('genesym')
+from .hgnc import HGNCLookup
+hgnc = HGNCLookup()
 
+logger = logging.getLogger('genesym')
 data_dir = '/Users/irina/Projects/insilico medicine/datasets/'
+
 
 def get_gpl_r(gpl_id):
     tic = time.time()
@@ -64,7 +66,7 @@ def get_hgnc_id_symbol(row):
 
     gene_symbol = get_gene_symbol(row)
     if gene_symbol is not None:
-        hgnc_id, hgnc_symbol = hgnc_lookup(gene_symbol)
+        hgnc_id, hgnc_symbol = hgnc.lookup(gene_symbol)
 
     else:
         # lookup other ids
@@ -97,48 +99,6 @@ def get_gene_symbol(row):
         gene_symbol = None
 
     return gene_symbol
-
-
-def hgnc_lookup(gene_symbol):
-    hgnc_symbol = None
-    hgnc_id = str(gene_symbol) + '_HGNC'
-
-    hgnc_complete_set_fn = '/Users/irina/Projects/insilico medicine/datasets/hgnc_complete_set.txt'
-
-    tic = time.time()
-    hgnc_df = pandas.read_csv(hgnc_complete_set_fn, delimiter='\t')
-    toc = time.time()
-    logger.debug('HGNC file load took {} sec'.format(toc - tic))
-
-    cols = ['Approved Symbol', 'Previous Symbols', 'Synonyms', 'HGNC ID']
-    hgnc_df = hgnc_df[cols]
-
-    found = False
-
-    for col in cols:
-        df = hgnc_df[hgnc_df[col] == gene_symbol]
-        if df.shape[0] == 0:
-            continue
-        elif df.shape[0] == 1:
-            hgnc_symbol = df.loc[df.index[0], 'Approved Symbol']
-            hgnc_id = df.loc[df.index[0], 'HGNC ID']
-            found = True
-            break
-        else:
-            raise Exception('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
-                gene_symbol, col, df.shape
-            ))
-
-    if not found:
-        logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
-
-    logger.debug('gene_symbol = {}, hgnc_symbol = {}, hgnc_id = {}'.format(
-        gene_symbol, hgnc_symbol, hgnc_id
-    ))
-    if gene_symbol != hgnc_symbol:
-        logger.debug('gene_symbol {} was changed to {}!'.format(gene_symbol, hgnc_symbol))
-
-    return hgnc_id, hgnc_symbol
 
 
 def get_symbol_from_entrez_id(entrez_id):
