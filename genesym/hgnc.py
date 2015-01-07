@@ -37,9 +37,10 @@ class HGNCLookup:
                 found = True
                 break
             else:
-                raise Exception('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
+                logger.warning('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
                     gene_symbol, col, df.shape
                 ))
+                pass
 
         if not found:
             logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
@@ -69,9 +70,10 @@ class HGNCLookup:
                 break
             else:
                 logger.debug('non-unique match: {}'.format(pprint.pprint(df)))
-                raise Exception('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
+                logger.warning('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
                     gene_symbol, col, df.shape
                 ))
+                pass
 
         if not found:
             logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
