@@ -1,4 +1,6 @@
 import unittest
+import pandas
+import numpy
 
 from genesym import geodriver, hgnc
 
@@ -54,6 +56,34 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual('HGNC:10331', hgnc_id)
         self.assertEqual('RPL29', hgnc_sym)
 
+
+    def test_get_hgnc_id_symbol_1(self):
+        # trivial test: Gene Symbol equals to HGNC
+        row = pandas.Series(data=pandas.Series(
+            {'ID': '1007_s_at',
+             'GB_ACC': 'U48705',
+             'Gene Symbol': 'DDR1',
+             'ENTREZ_GENE_ID': '780'}
+        ))
+
+        hgnc_id, hgnc_symbol = geodriver.get_hgnc_id_symbol(row)
+        self.assertEqual('DDR1', hgnc_symbol)
+        self.assertEqual('HGNC:2730', hgnc_id)
+
+    def test_get_hgnc_id_symbol_2(self):
+        # empty Symbol and Entrez Gene ID, but Unigene is present
+        # example from GPL10558
+        row = pandas.Series(data=pandas.Series(
+            {'ID': 'ILMN_1913641',
+             'GB_ACC': 'AL833463',
+             'Symbol': numpy.nan,
+             'Entrez_Gene_ID': numpy.nan,
+             'Unigene_ID': 'Hs.87194'}
+        ))
+
+        hgnc_id, hgnc_symbol = geodriver.get_hgnc_id_symbol(row)
+        self.assertEqual('PYGO1', hgnc_symbol)
+        self.assertEqual('HGNC:30256', hgnc_id)
 
 if __name__ == '__main__':
     unittest.main()
