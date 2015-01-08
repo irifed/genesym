@@ -8,8 +8,8 @@ import pandas
 import numpy
 import logging
 
-from .hgnc import HGNCLookup
-hgnc = HGNCLookup()
+from .hgnc import hgnc
+from .biomart import biomart
 
 logger = logging.getLogger('genesym')
 data_dir = '/Users/irina/Projects/insilico medicine/datasets/'
@@ -63,18 +63,22 @@ def get_hgnc_id_symbol(row):
     # if it does not exist, get unigene id and lookup in biomart
     # ... genbank accession
     # ...
+    hgnc_id, hgnc_symbol = 'TODO_ID', 'TODO_SYMBOL'
 
-    gene_symbol = get_gene_symbol(row)
+    gene_symbol = get_attribute(row, ['Symbol', 'Gene Symbol'])
     if gene_symbol is not None:
         hgnc_id, hgnc_symbol = hgnc.lookup(gene_symbol)
 
     else:
-        # lookup other ids
+        unigene_id = get_attribute(row, ['Unigene_ID'])
+        if unigene_id is not None:
+            hgnc_id, hgnc_symbol = biomart.lookup_unigene_id(unigene_id)
+
+        # TODO: lookup other ids
         # entrez
         # unigene
         # genbank id GI
         # genbank accession
-        hgnc_id, hgnc_symbol = 'TODO_ID', 'TODO_SYMBOL'
 
     toc = time.time()
 
@@ -82,24 +86,23 @@ def get_hgnc_id_symbol(row):
 
     return hgnc_id, hgnc_symbol
 
-def get_gene_symbol(row):
-    # TODO check: 'symbol' or 'gene symbol' or other symbol name must be present or not?
-    gene_symbol = None
 
-    if 'Gene Symbol' in row:
-        gene_symbol = row['Gene Symbol']
-    elif 'Symbol' in row:
-        gene_symbol = row['Symbol']
-    else:
-        logger.warning('Gene Symbol attribute is not found in row {}'.format(row))
+def get_attribute(row, attr_list=[]):
+    # find attribute in row, return first found attribute from attr_list
 
-    logger.debug('gene_symbol = {}'.format(gene_symbol))
+    result = None
 
-    if type(gene_symbol) == float and numpy.isnan(gene_symbol):
-        gene_symbol = None
+    for attr in attr_list:
+        if attr in row:
+            result = row[attr]
+        else:
+            logger.debug('{} attribute is not found in row {}'.format(
+                attr, row
+            ))
+        if result is not None:
+            # protect from NA values
+            if type(result) == float and numpy.isnan(result):
+                result = None
+            break
 
-    return gene_symbol
-
-
-def get_symbol_from_entrez_id(entrez_id):
-    return 'foo_entrez_hgnc'
+    return result

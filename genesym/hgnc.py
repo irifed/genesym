@@ -40,6 +40,7 @@ class HGNCLookup:
                 logger.warning('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
                     gene_symbol, col, df.shape
                 ))
+                # TODO skip this for now
                 pass
 
         if not found:
@@ -73,9 +74,12 @@ class HGNCLookup:
                 logger.warning('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
                     gene_symbol, col, df.shape
                 ))
+                # TODO skip this for now
                 pass
 
         if not found:
             logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
 
         return hgnc_id, hgnc_symbol
+
+hgnc = HGNCLookup()

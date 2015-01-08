@@ -2,7 +2,9 @@ import unittest
 import pandas
 import numpy
 
-from genesym import geodriver, hgnc
+from genesym import geodriver
+from genesym.hgnc import hgnc
+from genesym.biomart import biomart
 
 class MyTestCase(unittest.TestCase):
 
@@ -25,37 +27,40 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual('WRAP53', gpldf['Gene Symbol'][54400-1])
 
-    def test_hgnc_lookup(self):
-        hl = hgnc.HGNCLookup()
-
-        hgnc_id, hgnc_sym = hl.lookup('BTBD16')
+    def test_hgnc_lookup_1(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('BTBD16')
         self.assertEqual('HGNC:26340', hgnc_id)
         self.assertEqual('BTBD16', hgnc_sym)
 
-        hgnc_id, hgnc_sym = hl.lookup('ACTGP5')
+    def test_hgnc_lookup_2(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('ACTGP5')
         self.assertEqual('HGNC:150', hgnc_id)
         self.assertEqual('ACTBP12', hgnc_sym)
 
-        hgnc_id, hgnc_sym = hl.lookup('XPMC2H')
+    def test_hgnc_lookup_3(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('XPMC2H')
         self.assertEqual('HGNC:12820', hgnc_id)
         self.assertEqual('REXO4', hgnc_sym)
 
-        hgnc_id, hgnc_sym = hl.lookup('FAM80B2')
+    def test_hgnc_lookup_4(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('FAM80B2')
         self.assertEqual('HGNC:34034', hgnc_id)
         self.assertEqual('RIMKLBP1', hgnc_sym)
 
-        hgnc_id, hgnc_sym = hl.lookup('TOB1')
+    def test_hgnc_lookup_5(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('TOB1')
         self.assertEqual('HGNC:11979', hgnc_id)
         self.assertEqual('TOB1', hgnc_sym)
 
-        hgnc_id, hgnc_sym = hl.lookup('ABC8')
+    def test_hgnc_lookup_6(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('ABC8')
         self.assertEqual('HGNC:73', hgnc_id)
         self.assertEqual('ABCG1', hgnc_sym)
 
-        hgnc_id, hgnc_sym = hl.lookup('L29')
+    def test_hgnc_lookup_7(self):
+        hgnc_id, hgnc_sym = hgnc.lookup('L29')
         self.assertEqual('HGNC:10331', hgnc_id)
         self.assertEqual('RPL29', hgnc_sym)
-
 
     def test_get_hgnc_id_symbol_1(self):
         # trivial test: Gene Symbol equals to HGNC
@@ -84,6 +89,21 @@ class MyTestCase(unittest.TestCase):
         hgnc_id, hgnc_symbol = geodriver.get_hgnc_id_symbol(row)
         self.assertEqual('PYGO1', hgnc_symbol)
         self.assertEqual('HGNC:30256', hgnc_id)
+
+    def test_biomart_unigene_lookup_1(self):
+        # normal case
+        hgnc_id, hgnc_symbol = biomart.lookup_unigene_id('Hs.447469')
+
+        self.assertEqual('HGNC:15210', hgnc_id)
+        self.assertEqual('OR52B5P', hgnc_symbol)
+
+    def test_biomart_unigene_lookup_2(self):
+        # non-existent unigene id
+        bad_id = 'Hs.000'
+        hgnc_id, hgnc_symbol = biomart.lookup_unigene_id(bad_id)
+
+        self.assertEqual(bad_id + '_HGNC_ID', hgnc_id)
+        self.assertEqual(bad_id + '_HGNC_SYMBOL', hgnc_symbol)
 
 if __name__ == '__main__':
     unittest.main()
