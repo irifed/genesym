@@ -72,7 +72,9 @@ class HGNCLookup:
         for col in ['Previous Symbols', 'Synonyms']:
 
             df = self.hgnc_df[
-                self.hgnc_df[col].fillna('').str.contains(r'\b{}\b'.format(gene_symbol))
+                self.hgnc_df[col].fillna('').str.contains(
+                    r'\b{}\b'.format(gene_symbol)
+                )
             ]
             if df.shape[0] == 0:
                 continue
