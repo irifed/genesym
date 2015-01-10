@@ -97,7 +97,7 @@ def get_attribute(row, attr_list=[]):
             result = row[attr]
         else:
             logger.debug('{} attribute is not found in row {}'.format(
-                attr, row
+                attr, row.keys()
             ))
         if result is not None:
             # protect from NA values

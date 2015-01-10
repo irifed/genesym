@@ -6,12 +6,16 @@ import csv
 from genesym.geodriver import get_gpl, get_hgnc_id_symbol
 
 import logging
+from genesym import format
 
 logger = logging.getLogger('genesym')
 
 
 def process_platform(gpl_id):
     logfh = logging.FileHandler(gpl_id + '.log')
+    logfh.setLevel(level=logging.DEBUG)
+    logfh.setFormatter(logging.Formatter(format))
+
     logger.addHandler(logfh)
 
     gpldf = get_gpl(gpl_id)
@@ -43,8 +47,8 @@ def process_platform(gpl_id):
         n_found_hgnc_ids, 100*n_found_hgnc_ids/gpldf.shape[0]))
 
     # DEBUG
-    for idx, row in gpldf.iterrows():
-        print(row)
+    # for idx, row in gpldf.iterrows():
+    #     print(row)
 
     gpldf.to_csv(gpl_id + '.hgnc.txt', sep='\t', quoting=csv.QUOTE_NONNUMERIC)
     gpldf[['ID', 'HGNC_ID', 'HGNC_Symbol']].to_csv(gpl_id + '.only_hgnc.txt', sep='\t')
