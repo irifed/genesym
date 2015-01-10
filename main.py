@@ -2,6 +2,7 @@
 
 import pandas
 import time
+import csv
 from genesym.geodriver import get_gpl, get_hgnc_id_symbol
 
 import logging
@@ -37,7 +38,7 @@ def process_platform(gpl_id):
         logging.debug('hgnc_id = {}, hgnc_symbol = {}'.format(hgnc_id, hgnc_symbol))
 
     # print some stats
-    print('Total number of rows: {}'.format())
+    print('Total number of rows: {}'.format(gpldf.shape[0]))
     print('Number or HGNC IDs found: {} ({}%)'.format(
         n_found_hgnc_ids, 100*n_found_hgnc_ids/gpldf.shape[0]))
 
@@ -45,8 +46,8 @@ def process_platform(gpl_id):
     for idx, row in gpldf.iterrows():
         print(row)
 
-    gpldf.to_csv(gpl_id + '.hgnc.txt', sep='\t')
-    gpldf['ID', 'HGNC_ID', 'HGNC_Symbol'].to_csv(gpl_id + '.only_hgnc.txt', sep='\t')
+    gpldf.to_csv(gpl_id + '.hgnc.txt', sep='\t', quoting=csv.QUOTE_NONNUMERIC)
+    gpldf[['ID', 'HGNC_ID', 'HGNC_Symbol']].to_csv(gpl_id + '.only_hgnc.txt', sep='\t')
 
 
 def main():
