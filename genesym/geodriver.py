@@ -8,11 +8,11 @@ import pandas
 import numpy
 import logging
 
+from config import data_dir
 from .hgnc import hgnc
 from .biomart import biomart
 
 logger = logging.getLogger('genesym')
-data_dir = '/Users/irina/Projects/insilico medicine/datasets/'
 
 
 def get_gpl_r(gpl_id):
@@ -63,7 +63,7 @@ def get_hgnc_id_symbol(row):
     # if it does not exist, get unigene id and lookup in biomart
     # ... genbank accession
     # ...
-    hgnc_id, hgnc_symbol = 'TODO_ID', 'TODO_SYMBOL'
+    hgnc_id, hgnc_symbol = None, None
 
     gene_symbol = get_attribute(row, ['Symbol', 'Gene Symbol'])
     if gene_symbol is not None:

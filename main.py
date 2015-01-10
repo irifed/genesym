@@ -3,7 +3,6 @@
 import pandas
 import time
 from genesym.geodriver import get_gpl, get_hgnc_id_symbol
-from pprint import pprint
 
 import logging
 
@@ -11,6 +10,9 @@ logger = logging.getLogger('genesym')
 
 
 def process_platform(gpl_id):
+    logfh = logging.FileHandler(gpl_id + '.log')
+    logger.addHandler(logfh)
+
     gpldf = get_gpl(gpl_id)
     print(gpldf.columns)
 

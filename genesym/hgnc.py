@@ -3,14 +3,14 @@ import pandas
 import logging
 import pprint
 
+from config import hgnc_complete_set_fn
+
 logger = logging.getLogger('genesym')
 
 class HGNCLookup:
 
     def __init__(self):
         logger.debug('Loading HGNC lookup file...')
-
-        hgnc_complete_set_fn = '/Users/irina/Projects/insilico medicine/datasets/hgnc_complete_set.txt'
 
         tic = time.time()
         self.hgnc_df = pandas.read_csv(hgnc_complete_set_fn, delimiter='\t')
