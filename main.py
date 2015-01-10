@@ -21,22 +21,30 @@ def process_platform(gpl_id):
     # DEBUG
     gpldf = gpldf[215:220]
 
-
+    n_found_hgnc_ids = 0
     for idx, row in gpldf.iterrows():
         logger.info('Processing ID={}'.format(row['ID']))
 
         hgnc_id, hgnc_symbol = get_hgnc_id_symbol(row)
-        gpldf.loc[idx, 'HGNC_ID'] = hgnc_id
-        gpldf.loc[idx, 'HGNC_Symbol'] = hgnc_symbol
+        if hgnc_id is not None:
+            gpldf.loc[idx, 'HGNC_ID'] = hgnc_id
+            n_found_hgnc_ids += 1
+        if hgnc_symbol is not None:
+            gpldf.loc[idx, 'HGNC_Symbol'] = hgnc_symbol
 
         logging.debug('hgnc_id = {}, hgnc_symbol = {}'.format(hgnc_id, hgnc_symbol))
+
+    # print some stats
+    print('Total number of rows: {}'.format())
+    print('Number or HGNC IDs found: {} ({}%)'.format(
+        n_found_hgnc_ids, 100*n_found_hgnc_ids/gpldf.shape[0]))
 
     # DEBUG
     for idx, row in gpldf.iterrows():
         print(row)
 
-    result_fn = gpl_id + '.hgnc.txt'
-    gpldf.to_csv(result_fn, sep='\t')
+    gpldf.to_csv(gpl_id + '.hgnc.txt', sep='\t')
+    gpldf['ID', 'HGNC_ID', 'HGNC_Symbol'].to_csv(gpl_id + '.only_hgnc.txt', sep='\t')
 
 
 def main():
