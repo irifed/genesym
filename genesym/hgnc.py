@@ -23,11 +23,11 @@ class HGNCLookup:
 
     def lookup(self, gene_symbol):
         hgnc_symbol = None
-        hgnc_id = str(gene_symbol) + '_HGNC'
+        hgnc_id = None
 
         found = False
 
-        for col in self.cols[0:3]:
+        for col in ['Approved Symbol', 'Previous Symbols', 'Synonyms']:
             df = self.hgnc_df[self.hgnc_df[col] == gene_symbol]
             if df.shape[0] == 0:
                 continue
@@ -37,31 +37,43 @@ class HGNCLookup:
                 found = True
                 break
             else:
-                logger.warning('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
-                    gene_symbol, col, df.shape
+                logger.warning(
+                    'Non unique match for gene_symbol = {} and col = {}: '
+                    'shape = {}'.format(gene_symbol, col, df.shape
                 ))
-                # TODO skip this for now
+                # skip symbol this for now,
+                # this symbol will be verified using other available id's
                 pass
 
         if not found:
-            logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
             hgnc_id, hgnc_symbol = self.lookup_slow(gene_symbol)
 
-        logger.debug('gene_symbol = {}, hgnc_symbol = {}, hgnc_id = {}'.format(
-            gene_symbol, hgnc_symbol, hgnc_id
-        ))
-        if gene_symbol != hgnc_symbol:
-            logger.debug('gene_symbol {} was changed to {}!'.format(gene_symbol, hgnc_symbol))
+        if hgnc_id is None or hgnc_symbol is None:
+            logger.warning('HGNC match is not found for Symbol={}'.format(
+                gene_symbol)
+            )
+        else:
+            logger.debug('gene_symbol = {}, '
+                         'hgnc_symbol = {}, hgnc_id = {}'.format(
+                gene_symbol, hgnc_symbol, hgnc_id
+            ))
+            if gene_symbol != hgnc_symbol:
+                logger.debug('gene_symbol {} was changed to {}!'.format(
+                    gene_symbol, hgnc_symbol)
+                )
 
         return hgnc_id, hgnc_symbol
 
     def lookup_slow(self, gene_symbol):
         hgnc_symbol = None
-        hgnc_id = str(gene_symbol) + '_HGNC'
+        hgnc_id = None
 
         found = False
-        for col in self.cols[1:3]:
-            df = self.hgnc_df[self.hgnc_df[col].fillna('').str.contains(r'\b{}\b'.format(gene_symbol))]
+        for col in ['Previous Symbols', 'Synonyms']:
+
+            df = self.hgnc_df[
+                self.hgnc_df[col].fillna('').str.contains(r'\b{}\b'.format(gene_symbol))
+            ]
             if df.shape[0] == 0:
                 continue
             elif df.shape[0] == 1:
@@ -74,11 +86,14 @@ class HGNCLookup:
                 logger.warning('Non unique match for gene_symbol = {} and col = {}: shape = {}'.format(
                     gene_symbol, col, df.shape
                 ))
-                # TODO skip this for now
+                # skip this for now,
+                # hope this symbol will be found using other methods
                 pass
 
         if not found:
-            logger.warning('HGNC match is not found for Symbol={}'.format(gene_symbol))
+            logger.warning('HGNC match is not found for Symbol={}'.format(
+                gene_symbol
+            ))
 
         return hgnc_id, hgnc_symbol
 
