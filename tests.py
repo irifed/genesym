@@ -102,8 +102,8 @@ class MyTestCase(unittest.TestCase):
         bad_id = 'Hs.000'
         hgnc_id, hgnc_symbol = biomart.lookup_unigene_id(bad_id)
 
-        self.assertEqual(bad_id + '_HGNC_ID', hgnc_id)
-        self.assertEqual(bad_id + '_HGNC_SYMBOL', hgnc_symbol)
+        self.assertEqual(None, hgnc_id)
+        self.assertEqual(None, hgnc_symbol)
 
 if __name__ == '__main__':
     unittest.main()

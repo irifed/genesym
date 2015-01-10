@@ -22,8 +22,9 @@ class BioMart:
         logging.debug('Starting BioMart done in {} sec'.format(toc - tic))
 
     def lookup_unigene_id(self, unigene_id):
-        hgnc_id = unigene_id + '_HGNC_ID'
-        hgnc_symbol = unigene_id + '_HGNC_SYMBOL'
+        # return None if no match found
+        hgnc_id = None
+        hgnc_symbol = None
 
         tic = time.time()
 
@@ -32,7 +33,7 @@ class BioMart:
         '''.format(unigene_id))
         hgnc_id_df = com.load_data('hgnc_id')
         if hgnc_id_df.shape == (1, 1):
-            hgnc_id = hgnc_id_df.iloc[0,0]
+            hgnc_id = hgnc_id_df.iloc[0, 0]
         else:
             logger.warning('Non-unique match found for Unigene ID = {}: hgnc_id = {}'.format(
                 unigene_id, hgnc_id_df
@@ -43,7 +44,7 @@ class BioMart:
         '''.format(unigene_id))
         hgnc_symbol_df = com.load_data('hgnc_symbol')
         if hgnc_symbol_df.shape == (1, 1):
-            hgnc_symbol = hgnc_symbol_df.iloc[0,0]
+            hgnc_symbol = hgnc_symbol_df.iloc[0, 0]
         else:
             logger.warning('Non-unique match found for Unigene ID = {}: hgnc_symbol = {}'.format(
                 unigene_id, hgnc_symbol_df
