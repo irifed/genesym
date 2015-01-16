@@ -3,8 +3,10 @@ import pandas
 import numpy
 
 from genesym import geodriver
-from genesym.hgnc import hgnc
-from genesym.biomart import biomart
+from genesym.finder import FileFinder
+
+from genesym.geodriver import hgnc
+#from genesym.geodriver import biomart
 
 class MyTestCase(unittest.TestCase):
 
@@ -86,24 +88,28 @@ class MyTestCase(unittest.TestCase):
              'Unigene_ID': 'Hs.87194'}
         ))
 
+    # TODO test: non-empty symbol, but is outdated (hgnc approved is different)
+    # TODO test: empty symbol, but entrez gene id is present
+
         hgnc_id, hgnc_symbol = geodriver.get_hgnc_id_symbol(row)
         self.assertEqual('PYGO1', hgnc_symbol)
         self.assertEqual('HGNC:30256', hgnc_id)
 
-    def test_biomart_unigene_lookup_1(self):
-        # normal case
-        hgnc_id, hgnc_symbol = biomart.lookup_unigene_id('Hs.447469')
+    # def test_biomart_unigene_lookup_1(self):
+    #     # normal case
+    #     hgnc_id, hgnc_symbol = biomart.lookup_unigene_id('Hs.447469')
+    #
+    #     self.assertEqual('HGNC:15210', hgnc_id)
+    #     self.assertEqual('OR52B5P', hgnc_symbol)
+    #
+    # def test_biomart_unigene_lookup_2(self):
+    #     # non-existent unigene id
+    #     bad_id = 'Hs.000'
+    #     hgnc_id, hgnc_symbol = biomart.lookup_unigene_id(bad_id)
+    #
+    #     self.assertEqual(None, hgnc_id)
+    #     self.assertEqual(None, hgnc_symbol)
 
-        self.assertEqual('HGNC:15210', hgnc_id)
-        self.assertEqual('OR52B5P', hgnc_symbol)
-
-    def test_biomart_unigene_lookup_2(self):
-        # non-existent unigene id
-        bad_id = 'Hs.000'
-        hgnc_id, hgnc_symbol = biomart.lookup_unigene_id(bad_id)
-
-        self.assertEqual(None, hgnc_id)
-        self.assertEqual(None, hgnc_symbol)
 
 if __name__ == '__main__':
     unittest.main()

@@ -6,13 +6,20 @@ import rpy2.robjects as robjects
 import pandas.rpy.common as com
 import pandas
 import numpy
+import config
+
 import logging
-
-from config import data_dir
-from .hgnc import hgnc
-from .biomart import biomart
-
 logger = logging.getLogger('genesym')
+
+# from .biomart import BioMart
+# biomart = BioMart()
+
+from .finder import FileFinder
+hgnc = FileFinder(config.hgnc_complete_set_fn,
+                  hgnc_symbol_colname='Approved Symbol',
+                  hgnc_id_colname='HGNC ID')
+ensemble = FileFinder(config.ensemble_fn, hgnc_id_colname='HGNC ID(s)')
+#martquery = FileFinder(config.martquery_fn)
 
 
 def get_gpl_r(gpl_id):
@@ -22,7 +29,7 @@ def get_gpl_r(gpl_id):
         destdir <- "{}"
         gpl <- getGEO("{}", destdir = destdir)
         gpldf <- Table(gpl)
-    '''.format(data_dir, gpl_id))
+    '''.format(config.data_dir, gpl_id))
     toc = time.time()
     logging.debug('getGEO took {} seconds'.format(toc - tic))
 
@@ -39,7 +46,7 @@ def get_gpl(gpl_id):
     # find start and stop of platform table in SOFT file
     table_begin_ln = 0
     table_end_ln = 0
-    soft_fn = data_dir + gpl_id + '.soft'
+    soft_fn = config.data_dir + gpl_id + '.soft'
     with open(soft_fn) as soft_file:
         for num, line in enumerate(soft_file, 1):
             if '!platform_table_begin' in line:
@@ -57,6 +64,11 @@ def get_gpl(gpl_id):
     return gpldf
 
 def get_hgnc_id_symbol(row):
+    """Main routine for finding HGNC id and symbol for row from GPL dataframe
+
+    :param row: row from GPL dataframe
+    :return: hgnc_id, hgnc_symbol for given row, None values if not found
+    """
     tic = time.time()
     # get gene symbol value
     # if it does not exist, get entrez id and lookup in biomart
@@ -65,14 +77,20 @@ def get_hgnc_id_symbol(row):
     # ...
     hgnc_id, hgnc_symbol = None, None
 
-    gene_symbol = get_attribute(row, ['Symbol', 'Gene Symbol'])
+    # TODO analyze row keys() to find attribute names of Symbol, Unigene, etc
+    symbol_keynames = ['Symbol', 'Gene Symbol']
+    unigene_keyname = ['Unigene_ID']
+
+    gene_symbol = get_attribute(row, symbol_keynames)
     if gene_symbol is not None:
         hgnc_id, hgnc_symbol = hgnc.lookup(gene_symbol)
 
     else:
-        unigene_id = get_attribute(row, ['Unigene_ID'])
+        unigene_id = get_attribute(row, unigene_keyname)
         if unigene_id is not None:
-            hgnc_id, hgnc_symbol = biomart.lookup_unigene_id(unigene_id)
+            hgnc_id, hgnc_symbol = ensemble.lookup_unigene_id(unigene_id)
+            if hgnc_id is not None and hgnc_symbol is None:
+                hgnc_id, hgnc_symbol = hgnc.lookup_fast_low(hgnc_id, ['HGNC ID'])
 
         # TODO: lookup other ids
         # entrez
@@ -87,7 +105,7 @@ def get_hgnc_id_symbol(row):
     return hgnc_id, hgnc_symbol
 
 
-def get_attribute(row, attr_list=[]):
+def get_attribute(row, attr_list=list()):
     # find attribute in row, return first found attribute from attr_list
 
     result = None

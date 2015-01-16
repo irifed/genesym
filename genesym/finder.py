@@ -3,37 +3,56 @@ import pandas
 import logging
 import pprint
 
-from config import hgnc_complete_set_fn
 
 logger = logging.getLogger('genesym')
 
-class HGNCLookup:
 
-    def __init__(self):
-        logger.debug('Loading HGNC lookup file...')
+class FileFinder:
+
+    def __init__(self, data_fn,
+                 hgnc_symbol_colname=None,
+                 hgnc_id_colname=None):
+        logger.debug('Loading lookup file {}...'.format(data_fn))
 
         tic = time.time()
-        self.hgnc_df = pandas.read_csv(hgnc_complete_set_fn, delimiter='\t')
+        self.hgnc_df = pandas.read_csv(data_fn, delimiter='\t')
         toc = time.time()
-        logger.debug('HGNC file load took {} sec'.format(toc - tic))
+        logger.debug('File load took {} sec'.format(toc - tic))
 
-        self.cols = ['Approved Symbol', 'Previous Symbols', 'Synonyms', 'HGNC ID']
-        self.hgnc_df = self.hgnc_df[self.cols]
+        self.hgnc_symbol_colname = hgnc_symbol_colname
+        self.hgnc_id_colname = hgnc_id_colname
+        # TODO verify that these colnames exist
 
+    def get_hgnc_symbol(self, df):
+        if self.hgnc_symbol_colname in df.keys():
+            return df.loc[df.index[0], self.hgnc_symbol_colname]
+        return None
+
+    def get_hgnc_id(self, df):
+        if self.hgnc_id_colname in df.keys():
+            return df.loc[df.index[0], self.hgnc_id_colname]
+        return None
 
     def lookup(self, gene_symbol):
+        return self.lookup_fast_low(
+            gene_symbol,
+            ['Approved Symbol', 'Previous Symbols', 'Synonyms']
+        )
+
+    def lookup_fast_low(self, gene_symbol, cols):
+        # looks for exact match in given columns
         hgnc_symbol = None
         hgnc_id = None
 
         found = False
 
-        for col in ['Approved Symbol', 'Previous Symbols', 'Synonyms']:
+        for col in cols:
             df = self.hgnc_df[self.hgnc_df[col] == gene_symbol]
             if df.shape[0] == 0:
                 continue
             elif df.shape[0] == 1:
-                hgnc_symbol = df.loc[df.index[0], 'Approved Symbol']
-                hgnc_id = df.loc[df.index[0], 'HGNC ID']
+                hgnc_symbol = self.get_hgnc_symbol(df)
+                hgnc_id = self.get_hgnc_id(df)
                 found = True
                 break
             else:
@@ -65,11 +84,18 @@ class HGNCLookup:
         return hgnc_id, hgnc_symbol
 
     def lookup_slow(self, gene_symbol):
+        return self.lookup_slow_low(
+            gene_symbol,
+            ['Previous Symbols', 'Synonyms']
+        )
+
+    def lookup_slow_low(self, gene_symbol, cols):
+        # looks for substring (but whole word) match
         hgnc_symbol = None
         hgnc_id = None
 
         found = False
-        for col in ['Previous Symbols', 'Synonyms']:
+        for col in cols:
 
             df = self.hgnc_df[
                 self.hgnc_df[col].fillna('').str.contains(
@@ -99,4 +125,11 @@ class HGNCLookup:
 
         return hgnc_id, hgnc_symbol
 
-hgnc = HGNCLookup()
+    def lookup_entrez_id(self, entrez_id):
+        return self.lookup_fast_low(entrez_id, ['Entrez_Gene_ID'])
+
+    def lookup_unigene_id(self, unigene_id):
+        # unigene lookup file has only hgnc id column, but no symbol
+        hgnc_id, hgnc_symbol = self.lookup_fast_low(unigene_id, ['Unigene ID'])
+        return hgnc_id, hgnc_symbol
+

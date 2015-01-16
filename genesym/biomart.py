@@ -59,4 +59,3 @@ class BioMart:
 
         return hgnc_id, hgnc_symbol
 
-biomart = BioMart()
