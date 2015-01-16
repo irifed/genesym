@@ -6,7 +6,7 @@ import csv
 from genesym.geodriver import get_gpl, get_hgnc_id_symbol
 
 import logging
-from genesym import format
+from genesym import fmt
 
 logger = logging.getLogger('genesym')
 
@@ -14,7 +14,7 @@ logger = logging.getLogger('genesym')
 def process_platform(gpl_id):
     logfh = logging.FileHandler(gpl_id + '.log')
     logfh.setLevel(level=logging.DEBUG)
-    logfh.setFormatter(logging.Formatter(format))
+    logfh.setFormatter(logging.Formatter(fmt))
 
     logger.addHandler(logfh)
 
