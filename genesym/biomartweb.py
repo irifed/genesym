@@ -1,5 +1,4 @@
 import time
-import pprint
 import logging
 
 import rpy2.robjects as robjects
@@ -8,7 +7,7 @@ import pandas.rpy.common as com
 logger = logging.getLogger('genesym')
 
 
-class BioMart:
+class BioMartWeb:
 
     def __init__(self):
         logging.debug('Starting BioMart init...')

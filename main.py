@@ -39,7 +39,8 @@ def process_platform(gpl_id):
         if hgnc_symbol is not None:
             gpldf.loc[idx, 'HGNC_Symbol'] = hgnc_symbol
 
-        logging.debug('hgnc_id = {}, hgnc_symbol = {}'.format(hgnc_id, hgnc_symbol))
+        logging.debug('hgnc_id = {}, hgnc_symbol = {}'.format(
+            hgnc_id, hgnc_symbol))
 
     # print some stats
     print('Total number of rows: {}'.format(gpldf.shape[0]))
@@ -51,7 +52,8 @@ def process_platform(gpl_id):
     #     print(row)
 
     gpldf.to_csv(gpl_id + '.hgnc.txt', sep='\t', quoting=csv.QUOTE_NONNUMERIC)
-    gpldf[['ID', 'HGNC_ID', 'HGNC_Symbol']].to_csv(gpl_id + '.only_hgnc.txt', sep='\t')
+    gpldf[['ID', 'HGNC_ID', 'HGNC_Symbol']].to_csv(
+        gpl_id + '.only_hgnc.txt', sep='\t')
 
 
 def main():

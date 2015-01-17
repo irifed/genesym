@@ -1,6 +1,4 @@
-from pprint import pprint
 import time
-import re
 
 import rpy2.robjects as robjects
 import pandas.rpy.common as com
@@ -11,16 +9,7 @@ import config
 import logging
 logger = logging.getLogger('genesym')
 
-# from .biomart import BioMart
-# biomart = BioMart()
-
-from .finder import FileFinder
-hgnc = FileFinder(config.hgnc_complete_set_fn,
-                  hgnc_symbol_colname='Approved Symbol',
-                  hgnc_id_colname='HGNC ID')
-ensemble = FileFinder(config.ensemble_fn, hgnc_id_colname='HGNC ID(s)')
-#martquery = FileFinder(config.martquery_fn)
-
+from genesym import hgnc, biomartfile
 
 def get_gpl_r(gpl_id):
     tic = time.time()
@@ -83,14 +72,12 @@ def get_hgnc_id_symbol(row):
 
     gene_symbol = get_attribute(row, symbol_keynames)
     if gene_symbol is not None:
-        hgnc_id, hgnc_symbol = hgnc.lookup(gene_symbol)
+        hgnc_id, hgnc_symbol = hgnc.lookup_gene_symbol(gene_symbol)
 
     else:
         unigene_id = get_attribute(row, unigene_keyname)
         if unigene_id is not None:
-            hgnc_id, hgnc_symbol = ensemble.lookup_unigene_id(unigene_id)
-            if hgnc_id is not None and hgnc_symbol is None:
-                hgnc_id, hgnc_symbol = hgnc.lookup_fast_low(hgnc_id, ['HGNC ID'])
+            hgnc_id, hgnc_symbol = biomartfile.lookup_unigene_id(unigene_id)
 
         # TODO: lookup other ids
         # entrez
